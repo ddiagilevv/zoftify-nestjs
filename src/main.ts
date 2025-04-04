@@ -1,24 +1,29 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { GlobalExceptionFilter } from './exception.filter';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Apply global validation
+  // Глобальные пайпы (валидация DTO)
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
+      whitelist: true, // удаляем поля, не описанные в DTO
+      forbidNonWhitelisted: true, // бросаем ошибку, если есть лишние поля
+      transform: true, // автоматически преобразуем типы (например, к number)
     }),
   );
 
-  // Apply global exception filter
+  // Глобальный фильтр для обработки ошибок
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  await app.listen(3000);
-  console.log('Application is running on http://localhost:3000');
+  // Устанавливаем префикс API, если нужно
+  app.setGlobalPrefix('api');
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}/api`);
+  });
 }
 bootstrap();

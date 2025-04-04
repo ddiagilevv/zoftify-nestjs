@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "outDir": "./dist",
+      "incremental": true,
+      "tsBuildInfoFile": ".tsbuildinfo",
+      "declaration": true,
+      "noEmit": false
+    },
+    "exclude": ["node_modules", "test", "dist", "**/*.spec.ts", "**/*.test.ts"]
+}
+  

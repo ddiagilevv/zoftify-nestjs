@@ -1,59 +1,35 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
+
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string) {
-    const user = await this.userService.findByEmail(email);
+  async validateUser(email: string, pass: string): Promise<User> {
+    const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
+    const isMatch = await bcrypt.compare(pass, user.password);
+    if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
+
     return user;
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.validateUser(dto.email, dto.password);
-    const payload = { sub: user.id, email: user.email };
+  async login(user: User) {
+    const payload = { email: user.email, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
-      userId: user.id,
-      email: user.email,
-    };
-  }
-
-  async register(dto: RegisterDto) {
-    // Check if user already exists
-    const found = await this.userService.findByEmail(dto.email);
-    if (found) {
-      throw new UnauthorizedException('Email already exists');
-    }
-
-    // Hash password
-    const hash = await bcrypt.hash(dto.password, 10);
-    // Reuse userService to create
-    const newUser = await this.userService.createUser({
-      email: dto.email,
-      password: hash,
-      name: dto.name,
-    });
-    return {
-      message: 'Registration successful',
-      userId: newUser.id,
-      email: newUser.email,
     };
   }
 }

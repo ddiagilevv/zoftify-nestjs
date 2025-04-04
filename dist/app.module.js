@@ -8,27 +8,38 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const typeorm_1 = require("@nestjs/typeorm");
 const config_1 = require("@nestjs/config");
-const typeorm_config_1 = require("./config/typeorm.config");
-const logger_middleware_1 = require("./logger.middleware");
-const user_module_1 = require("./user/user.module");
+const typeorm_1 = require("@nestjs/typeorm");
+const configuration_1 = require("./config/configuration");
+const typeorm_config_1 = require("./database/typeorm.config");
+const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
+const request_logger_middleware_1 = require("./common/middleware/request-logger.middleware");
 let AppModule = class AppModule {
     configure(consumer) {
-        consumer.apply(logger_middleware_1.LoggerMiddleware).forRoutes('*');
+        // Подключение middleware для логирования времени запроса
+        consumer.apply(request_logger_middleware_1.RequestLoggerMiddleware).forRoutes('*');
     }
 };
-exports.AppModule = AppModule;
-exports.AppModule = AppModule = __decorate([
+AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({ isGlobal: true }),
-            typeorm_1.TypeOrmModule.forRootAsync({
-                useFactory: () => typeorm_config_1.typeOrmConfig,
+            // Подключаем ConfigModule (чтобы уметь читать из .env)
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                load: [configuration_1.configuration],
             }),
-            user_module_1.UserModule,
+            // Подключаем TypeORM
+            typeorm_1.TypeOrmModule.forRootAsync({
+                useFactory: () => typeorm_config_1.typeormConfig,
+            }),
+            // Модули приложения
+            users_module_1.UsersModule,
             auth_module_1.AuthModule,
         ],
+        controllers: [],
+        providers: [],
     })
 ], AppModule);
+exports.AppModule = AppModule;
+//# sourceMappingURL=app.module.js.map

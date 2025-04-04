@@ -1,24 +1,34 @@
 import { Module, MiddlewareConsumer } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { configuration } from './config/configuration';
+import { typeormConfig } from './database/typeorm.config';
 
-import { typeOrmConfig } from './config/typeorm.config';
-import { LoggerMiddleware } from './logger.middleware';
-import { UserModule } from './user/user.module';
+import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({
-      useFactory: () => typeOrmConfig,
+    // Подключаем ConfigModule (чтобы уметь читать из .env)
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
     }),
-    UserModule,
+    // Подключаем TypeORM
+    TypeOrmModule.forRootAsync({
+      useFactory: () => typeormConfig,
+    }),
+    // Модули приложения
+    UsersModule,
     AuthModule,
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    // Подключение middleware для логирования времени запроса
+    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
   }
 }

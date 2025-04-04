@@ -21,81 +21,49 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
-const user_service_1 = require("../user/user.service");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
+const users_service_1 = require("../users/users.service");
 let AuthService = class AuthService {
-    constructor(userService, jwtService) {
-        this.userService = userService;
+    constructor(usersService, jwtService) {
+        this.usersService = usersService;
         this.jwtService = jwtService;
     }
-    async validateUser(email, password) {
-        const user = await this.userService.findByEmail(email);
+    async validateUser(email, pass) {
+        const user = await this.usersService.findByEmail(email);
         if (!user) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) {
+        const isMatch = await bcrypt.compare(pass, user.password);
+        if (!isMatch) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
         return user;
     }
-    async login(dto) {
-        const user = await this.validateUser(dto.email, dto.password);
-        const payload = { sub: user.id, email: user.email };
+    async login(user) {
+        const payload = { email: user.email, sub: user.id };
         return {
             access_token: this.jwtService.sign(payload),
-            userId: user.id,
-            email: user.email,
-        };
-    }
-    async register(dto) {
-        // Check if user already exists
-        const found = await this.userService.findByEmail(dto.email);
-        if (found) {
-            throw new common_1.UnauthorizedException('Email already exists');
-        }
-        // Hash password
-        const hash = await bcrypt.hash(dto.password, 10);
-        // Reuse userService to create
-        const newUser = await this.userService.createUser({
-            email: dto.email,
-            password: hash,
-            name: dto.name,
-        });
-        return {
-            message: 'Registration successful',
-            userId: newUser.id,
-            email: newUser.email,
         };
     }
 };
-exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [user_service_1.UserService,
+    __metadata("design:paramtypes", [users_service_1.UsersService,
         jwt_1.JwtService])
 ], AuthService);
+exports.AuthService = AuthService;
+//# sourceMappingURL=auth.service.js.map
