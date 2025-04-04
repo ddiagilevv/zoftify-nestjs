@@ -1,31 +1,43 @@
 import { Module, MiddlewareConsumer } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { configuration } from './config/configuration';
-import { typeormConfig } from './database/typeorm.config';
-
-import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    // Подключаем ConfigModule (чтобы уметь читать из .env)
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
     }),
-    // Подключаем TypeORM
+
     TypeOrmModule.forRootAsync({
-      useFactory: () => typeormConfig,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST'),
+        port: config.get<number>('DB_PORT'),
+        username: config.get<string>('DB_USERNAME'),
+        password: config.get<string>('DB_PASSWORD'),
+        database: config.get<string>('DB_NAME'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+        synchronize: false,
+        autoLoadEntities: true,
+      }),
     }),
-    // Модули приложения
+
+    // 👇 Эти модули должны быть на уровне AppModule.imports
     UsersModule,
     AuthModule,
   ],
   controllers: [],
   providers: [],
 })
+
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     // Подключение middleware для логирования времени запроса

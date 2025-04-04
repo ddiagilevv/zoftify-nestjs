@@ -12,7 +12,9 @@ exports.typeormConfig = {
     password: config.database.password,
     database: config.database.name,
     entities: [user_entity_1.User],
-    synchronize: true,
-    logging: false,
+    synchronize: false,
+    migrationsRun: true,
+    migrations: [__dirname + '/../migrations/**/*{.ts,.js}'],
+    logging: process.env.NODE_ENV !== 'production',
 };
 //# sourceMappingURL=typeorm.config.js.map

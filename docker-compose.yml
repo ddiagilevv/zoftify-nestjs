@@ -1,0 +1,22 @@
+# docker-compose.yml
+version: "3.9"
+services:
+  db:
+    image: postgres:14-alpine    # официальный образ PostgreSQL (легковесная версия)
+    container_name: myapp-postgres
+    ports:
+      - "5432:5432"              # пробрасываем порт 5432 на хост для доступа
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # сохраняем данные базы между перезапусками
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "${DB_NAME}", "-U", "${DB_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
