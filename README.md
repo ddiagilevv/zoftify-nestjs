@@ -30,6 +30,11 @@ JWT_SECRET=supersecretjwtkey
 JWT_EXPIRES_IN=3600
 
 3. Run the App
+npm install @nestjs/config
+npm install @nestjs/common
+npm install @nestjs/jwt
+
+
 npm run start:dev
 
 Visit http://localhost:3000 in your browser.
